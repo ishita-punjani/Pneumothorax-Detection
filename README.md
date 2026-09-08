@@ -15,9 +15,7 @@ SVM and Random Forest classifiers.
 | Random Forest | 69.0% | 0.711 | 0.702 | 0.707 | 0.753 |
 
 Literature baseline ([Chan et al., 2018](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5903299/)): 85.8% accuracy,
-using true lung segmentation rather than the ROI approximation used here. See
-`docs/Literature_Review_Pneumothorax_CNN_free.docx` for full context and additional
-sources.
+using true lung segmentation rather than the ROI approximation used here.
 
 ## Repository structure
 
