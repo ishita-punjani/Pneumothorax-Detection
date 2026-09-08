@@ -1,0 +1,18 @@
+# Kaggle credentials — NEVER commit this file
+kaggle.json
+
+# X-ray images — regenerate via notebooks/01_data_cleaning.ipynb
+data/images/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
