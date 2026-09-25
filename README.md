@@ -7,6 +7,9 @@ Built on a balanced 500-image subset of the [NIH ChestX-ray14 dataset](https://w
 (250 Pneumothorax, 250 No Finding), using LBP and Sobel handcrafted features with
 SVM and Random Forest classifiers.
 
+> **Pipeline V1:** This version uses a coarse anatomical lung ROI followed by
+> constrained Otsu refinement for lung-region segmentation.
+
 ## Results
 
 | Model | Accuracy | Precision | Recall | F1 | AUC-ROC |
@@ -15,7 +18,7 @@ SVM and Random Forest classifiers.
 | Random Forest | 69.0% | 0.711 | 0.702 | 0.707 | 0.753 |
 
 Literature baseline ([Chan et al., 2018](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5903299/)): 85.8% accuracy,
-using true lung segmentation rather than the ROI approximation used here.
+using a dedicated lung segmentation approach rather than the constrained anatomical ROI refinement used in this pipeline.
 
 ## Repository structure
 
@@ -25,9 +28,11 @@ Pneumothorax-Detection/
 ├── requirements.txt
 ├── .gitignore
 ├── notebooks/
-│   ├── 01_data_cleaning.ipynb              # Dataset acquisition & subset selection
-│   └── Pneumothorax_Detection_Pipeline.ipynb  # Preprocessing, features, training, evaluation
-├── models/                                 # Pre-trained SVM, Random Forest, scaler (joblib)
+│   ├── 01_data_cleaning.ipynb
+│   └── Pneumothorax_Detection_Pipeline_v1.ipynb
+├── features/
+│   └── pneumothorax_extracted_features.csv
+├── models/
 │   ├── feature_cols.joblib
 │   ├── rf_model.joblib
 │   ├── scaler.joblib
@@ -59,11 +64,15 @@ Everything in this pipeline runs locally, end to end.
    > co-occurring findings (e.g. `"Pneumothorax|Effusion"`). Relevant if scaling up
    > the dataset later — use a `str.contains("Pneumothorax")` filter instead of an
    > exact match.
-
-4. Run `notebooks/Pneumothorax_Detection_Pipeline.ipynb` — covers ROI extraction,
-   LBP/Sobel feature extraction, patient-wise train/test split, feature scaling,
-   SVM and Random Forest training, and evaluation (confusion matrices, ROC curves).
-5. Trained models save automatically to `models/`.
+4. Run `notebooks/Pneumothorax_Detection_Pipeline_v1.ipynb` — covers image
+   preprocessing, ROI extraction, LBP/Sobel feature extraction, processing
+   visualizations, feature CSV export, patient-wise train/test split, feature
+   scaling, SVM and Random Forest training, and evaluation (confusion matrices,
+   ROC curves).
+5. The 36 extracted handcrafted features, together with image and patient
+   metadata, are saved to `features/pneumothorax_extracted_features.csv`
+   before the patient-wise train/test split.
+6. Trained models save automatically to `models/`.
 
 ### Using the pre-trained models directly
 
@@ -90,7 +99,13 @@ predictions = rf_model.predict(X_new)
   constrained to the ellipse (to avoid background bleed from unconstrained Otsu),
   followed by morphological cleanup.
 - **Features:** Local Binary Pattern (LBP, uniform, P=8, R=1) and Sobel edge
-  magnitude, both split left/right with asymmetry features (36 total).
+  magnitude, both split left/right with asymmetry features (36 total). The
+  complete extracted feature dataset is saved to
+  `features/pneumothorax_extracted_features.csv` before model training.
+- **Visualizations:** Before-and-after visualizations are provided for the
+  image-processing stages, including gamma correction, ROI refinement,
+  morphological processing, LBP texture representation, and Sobel edge
+  extraction.
 - **Split:** patient-wise 70/30, stratified, with an "any-positive" grouping rule for
   the 5 patients with mixed-label images across visits — prevents patient leakage.
 - **Classification:** SVM (RBF) and Random Forest, both grid-searched via 5-fold
@@ -104,4 +119,3 @@ predictions = rf_model.predict(X_new)
 
 - Scale to the full balanced subset (~5,302 Pneumothorax images + matched negatives)
 - Web frontend for image upload and prediction
-- Modularize the pipeline into reusable `src/` modules
